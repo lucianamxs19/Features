@@ -2,14 +2,15 @@
 exemplo_uso.py
 ==============
 Exemplo que roda sem nenhum dado: cria dois sinais sintéticos de vibração (rolamento saudável e com defeito),
-extrai as 75 features de cada um e mostra a diferença nas principais.
+extrai as 88 features de cada um e mostra a diferença nas principais.
 
 Rodar:   python exemplo_uso.py
 """
 import numpy as np
 import pandas as pd
 
-from features_vibracao import extrair_todas_features
+from features_avancadas import BearingGeometry
+from features_vibracao import extrair_88_features
 
 FS = 25600            # frequência de amostragem (Hz)
 N = 2560              # 0,1 s de sinal
@@ -29,10 +30,13 @@ def sinal_sintetico(defeito, seed=0):
 
 
 if __name__ == "__main__":
-    tabela = pd.DataFrame([extrair_todas_features(sinal_sintetico(False), FS),
-                           extrair_todas_features(sinal_sintetico(True), FS)], index=["saudável", "com defeito"])
+    geom = BearingGeometry()          # geometria aproximada do PRONOSTIA: troque pela do seu rolamento
+    rpm = 1800                        # rotação do eixo (rpm)
+    tabela = pd.DataFrame([extrair_88_features(sinal_sintetico(False), FS, geom, rpm),
+                           extrair_88_features(sinal_sintetico(True), FS, geom, rpm)], index=["saudável", "com defeito"])
     print(f"{tabela.shape[1]} features por janela\n")
-    principais = ["RMS", "Pico_a_Pico", "Curtose", "Fator_Crista", "Centroide_Espectral", "Energy_DWT_L3"]
+    principais = ["RMS", "Pico_a_Pico", "Curtose", "Fator_Crista", "Centroide_Espectral", "Energy_DWT_L3",
+                  "Kurtogram_MaxKurtosis", "PermutationEntropy", "Env_BPFO"]
     print(tabela[principais].T.round(3).to_string())
     tabela.T.to_csv("features_exemplo.csv", sep=";", decimal=",")
     print("\nTabela completa salva em features_exemplo.csv")

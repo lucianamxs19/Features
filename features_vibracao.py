@@ -9,6 +9,7 @@ TEMPO, da FREQUÊNCIA e TEMPO-FREQUÊNCIA. São 75 features por janela de sinal:
     tempo-frequência ... 48   calcular_metricas_tempo_frequencia(sinal, fs)
                                (STFT: 8 + wavelet DWT db4 em 4 níveis = 5 sub-bandas × 8 = 40)
     todas .............. 75   extrair_todas_features(sinal, fs)
+    banco completo ..... 88   extrair_88_features(sinal, fs, geom, rpm)   (+ 13 de features_avancadas.py)
 
 Origem: módulo de features usado no projeto de estimativa de vida útil remanescente (RUL) de rolamentos
 (PRONOSTIA / IEEE PHM 2012). O código de cálculo é o MESMO do projeto; aqui foram acrescentados só comentários
@@ -219,3 +220,22 @@ def extrair_todas_features(sinal_, fs=FS_PADRAO):
     m_freq = calcular_metricas_frequencia(sinal_, fs=fs)
     m_tf = calcular_metricas_tempo_frequencia(sinal_, fs=fs)
     return {**m_tempo, **m_freq, **m_tf}
+
+
+# ============================================================================================================
+# 5. BANCO COMPLETO (88 features) = 75 básicas + 13 avançadas (features_avancadas.py)
+# ============================================================================================================
+def extrair_88_features(sinal_, fs=FS_PADRAO, geom=None, rpm=None):
+    """O banco completo usado no projeto: 75 básicas + entropias, Hjorth, kurtograma e envelope.
+
+    geom: features_avancadas.BearingGeometry do SEU rolamento; rpm: rotação do eixo.
+    Com geom e rpm -> 88 features. Sem eles -> 84 (sem as 4 de envelope).
+
+        from features_avancadas import BearingGeometry
+        from features_vibracao import extrair_88_features
+        feats = extrair_88_features(sinal, 25600, geom=BearingGeometry(), rpm=1800)   # 88 features
+    """
+    from features_avancadas import extrair_features_avancadas
+    feats = extrair_todas_features(sinal_, fs=fs)
+    feats.update(extrair_features_avancadas(sinal_, fs, geom, rpm))
+    return feats
